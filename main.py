@@ -21,15 +21,18 @@ class MyWindow:
         self.b1=Button(win, text='Add', command=self.addGuild)
         self.b1.place(x=225, y=23)
 
+        self.lbl7=Label(win, text='Guilds:')
+        self.lbl7.place(x=25, y=50)
+
         self.lbl2=Label(win, text='Options:')
         self.lbl2.place(x=300, y=25)
 
-        self.lbl3=Label(win, text='Min Level:')
+        self.lbl3=Label(win, text='Max Level:')
         self.lbl3.place(x=300, y=50)
         self.t2=Entry(bd=3)
         self.t2.place(x=375, y=50)
 
-        self.lbl4=Label(win, text='Max Level:')
+        self.lbl4=Label(win, text='Min Level:')
         self.lbl4.place(x=300, y=75)
         self.t3=Entry(bd=3)
         self.t3.place(x=375, y=75)
@@ -39,6 +42,16 @@ class MyWindow:
         self.t4=Entry(bd=3)
         self.t4.place(x=375, y=100)
 
+        self.safe_mode = IntVar()
+        self.is_dead = IntVar()
+        self.verbose = IntVar()
+        self.box1=Checkbutton(text="Remove Safe Mode", variable=self.safe_mode)
+        self.box1.place(x=375, y=125)
+        self.box2=Checkbutton(text="Remove Dead", variable=self.is_dead)
+        self.box2.place(x=375, y=150)
+        self.box2=Checkbutton(text="Verbose", variable=self.verbose)
+        self.box2.place(x=375, y=175)
+
         self.lbl6=Label(win, text='Output:')
         self.lbl6.place(x=25, y=475)
         self.b2=Button(win, text='Clear', command=self.clearOutput)
@@ -47,10 +60,10 @@ class MyWindow:
         self.out1.place(x=25, y=500)
 
         self.b3=Button(win, text='Search', command=self.search)
-        self.b3.place(x=300, y=123)
+        self.b3.place(x=300, y=200)
 
         self.frame = Frame(win)
-        self.frame.place(x=25, y=50)
+        self.frame.place(x=25, y=75)
 
         self.listNodes = Listbox(self.frame, width=25, height=20, font=("Helvetica", 12))
         self.listNodes.pack(side="left", fill="y")
@@ -131,6 +144,12 @@ class MyWindow:
         self.searchUsers(users, max_level, min_level, min_gold)
         self.out1.insert(END, "Complete!\n")
 
+    def printUser(self, lib):
+        if self.verbose.get() == 0:
+            self.out1.insert(END, f'{lib["name"]} - https://web.simple-mmo.com/user/attack/{lib["id"]}\n')
+        else:
+            self.out1.insert(END, f'Name: {lib["name"]}\nLevel: {lib["level"]}\nHP: {lib["hp"]}/{lib["max_hp"]}\nGold: {lib["gold"]}\nhttps://web.simple-mmo.com/user/attack/{lib["id"]}\n\n')
+
     def searchUsers(self, users, max_level, min_level, min_gold):
         index = 0
         error_index = 0
@@ -141,8 +160,19 @@ class MyWindow:
                 r = requests.post(url = endpoint, data = payload)
                 lib = r.json()
                 index += 1
-                if lib["safeMode"] == 0 and lib["level"] >= min_level and lib["level"] <= max_level and lib["gold"] >= min_gold:
-                    self.out1.insert(END, f'{lib["name"]} - https://web.simple-mmo.com/user/attack/{userid}\n')
+                if lib["level"] >= min_level and lib["level"] <= max_level and lib["gold"] >= min_gold:
+                    if self.safe_mode.get() == 1 and self.is_dead.get() == 1:
+                        if lib["safeMode"] == 0 and int(lib["hp"]*2) > lib["max_hp"]:
+                            self.printUser(lib)
+                    elif self.is_dead.get() == 1:
+                        if int(lib["hp"]*2) > lib["max_hp"]:
+                            self.printUser(lib)
+                    elif self.safe_mode.get() == 1:
+                        if lib["safeMode"] == 0:
+                            self.printUser(lib)
+                    else:
+                        self.printUser(lib)
+
             except Exception as e:
                 print(e)
                 error_index += 1
@@ -157,6 +187,6 @@ api_key = config.get('DEFAULT', 'api_key')
 
 window=Tk()
 mywin=MyWindow(window)
-window.title('SMMO Player Checker BETA v0.1')
+window.title('SMMO Player Checker BETA v0.2')
 window.geometry("700x900")
 window.mainloop()
