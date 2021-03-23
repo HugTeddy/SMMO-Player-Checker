@@ -5,6 +5,7 @@ Date:        03/20/2021
 """
 from tkinter import *
 from tkinter.scrolledtext import ScrolledText
+from discord_webhook import DiscordWebhook
 import time
 import requests
 import json
@@ -53,11 +54,15 @@ class MyWindow:
         self.box2.place(x=375, y=175)
 
         self.lbl6=Label(win, text='Output:')
-        self.lbl6.place(x=25, y=475)
-        self.b2=Button(win, text='Clear', command=self.clearOutput)
-        self.b2.place(x=75, y=473)
-        self.out1 = ScrolledText(win)
-        self.out1.place(x=25, y=500)
+        self.lbl6.place(x=25, y=375)
+        self.b2=Button(win, width=4, text='Clear', command=self.clearOutput)
+        self.b2.place(x=75, y=373)
+        self.b4=Button(win, width=4, text='Save', command=self.save)
+        self.b4.place(x=120, y=373)
+        self.b5=Button(win, width=4, text='Hook', command=self.sendHook)
+        self.b5.place(x=165, y=373)
+        self.out1 = ScrolledText(win, height=20)
+        self.out1.place(x=25, y=400)
 
         self.b3=Button(win, text='Search', command=self.search)
         self.b3.place(x=300, y=200)
@@ -65,7 +70,7 @@ class MyWindow:
         self.frame = Frame(win)
         self.frame.place(x=25, y=75)
 
-        self.listNodes = Listbox(self.frame, width=25, height=20, font=("Helvetica", 12))
+        self.listNodes = Listbox(self.frame, width=25, height=15, font=("Helvetica", 12))
         self.listNodes.pack(side="left", fill="y")
 
         self.scrollbar = Scrollbar(self.frame, orient="vertical")
@@ -81,6 +86,8 @@ class MyWindow:
 
         if api_key == "<SMMO API KEY>":
             self.out1.insert(END, "Please make sure you have a valid SMMO API KEY in `config.ini`\n")
+        if web_hook == "<DISCORD WEB HOOK>":
+            self.out1.insert(END, "Please make sure you have a valid WEBHOOK in `config.ini`\n")
 
     def addGuild(self):
         id = str(self.t1.get())
@@ -96,8 +103,30 @@ class MyWindow:
                 json.dump(guildlist, f)
             self.listNodes.insert(END, lib["name"])
         except:
-            self.t1.delete(0,END)
-            self.t1.insert(END, "ERROR - GUILD ID ONLY")
+            self.out1.delete('1.0',END)
+            self.out1.insert(END, "ERROR - GUILD ID ONLY")
+
+    def sendHook(self):
+        cur_inp = self.out1.get("1.0", END)
+        if len(cur_inp) >= 1900:
+            index = 0
+            output = "**SMMO Player Checker - Results**\n"
+            search_terms = cur_inp.split("--------------")[0]
+            results = cur_inp.split("--------------")[0].split("\n\n")
+            output += search_terms
+            while output >= 1500:
+                output += results[index]
+                index += 1
+            output += "More..."
+        else:
+            output = "**SMMO Player Checker - Results**\n" + cur_inp
+        webhook = DiscordWebhook(url=web_hook, content=output)
+        response = webhook.execute()
+
+    def save(self):
+        cur_inp = self.out1.get("1.0", END)
+        fl = open("output.txt", "w")
+        fl.write(cur_inp)
 
     def clearOutput(self):
         self.out1.delete('1.0',END)
@@ -140,15 +169,23 @@ class MyWindow:
             min_gold = int(self.t4.get())
         except:
             min_gold = 0
-        self.out1.insert(END, f'Search Params:\nMax Level: {max_level}\nMin Level: {min_level}\nMin Gold: {min_gold}\n--------------\n')
+        search_term = f'Search Params:\nMax Level: {max_level}\nMin Level: {min_level}\nMin Gold: {min_gold}\n'
+        if self.safe_mode.get() == 1:
+            search_term += "Safe Mode Players Removed\n"
+        if self.is_dead.get() == 1:
+            search_term += "Dead Players Removed\n"
+        if self.verbose.get() == 1:
+            search_term += "Verbose On\n"
+        search_term += "--------------\n"
+        self.out1.insert(END, search_term)
         self.searchUsers(users, max_level, min_level, min_gold)
         self.out1.insert(END, "Complete!\n")
 
     def printUser(self, lib):
         if self.verbose.get() == 0:
-            self.out1.insert(END, f'{lib["name"]} - https://web.simple-mmo.com/user/attack/{lib["id"]}\n')
+            self.out1.insert(END, f'[{lib["name"]}](<https://web.simple-mmo.com/user/attack/{lib["id"]}>)\n')
         else:
-            self.out1.insert(END, f'Name: {lib["name"]}\nLevel: {lib["level"]}\nHP: {lib["hp"]}/{lib["max_hp"]}\nGold: {lib["gold"]}\nhttps://web.simple-mmo.com/user/attack/{lib["id"]}\n\n')
+            self.out1.insert(END, f'Name: {lib["name"]}\nLevel: {lib["level"]}\nHP: {lib["hp"]}/{lib["max_hp"]}\nGold: {lib["gold"]}\n[Attack Link](<https://web.simple-mmo.com/user/attack/{lib["id"]}>)\n\n')
 
     def searchUsers(self, users, max_level, min_level, min_gold):
         index = 0
@@ -184,9 +221,10 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 config = configparser.ConfigParser()
 config.read(f'{dir_path}\\config.ini')
 api_key = config.get('DEFAULT', 'api_key')
+web_hook = config.get('DEFAULT', 'web_hook')
 
 window=Tk()
 mywin=MyWindow(window)
-window.title('SMMO Player Checker BETA v0.2')
-window.geometry("700x900")
+window.title('SMMO Player Checker BETA v0.3')
+window.geometry("700x750")
 window.mainloop()

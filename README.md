@@ -4,7 +4,8 @@ Standalone utility to check player status for PvP interests in SimpleMMO.
 
 ## Requirements
 -	Python3
--	Requests (Package)
+-	requests==2.24.0
+- discord_webhook==0.12.0
 
 ## Initial Config
 Update `config.ini` with your API key from the SMMO webapp, found [Here](https://web.simple-mmo.com/p-api/home)
