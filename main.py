@@ -8,6 +8,8 @@ from tkinter import ttk
 from PIL import ImageTk, Image
 from tkinter.scrolledtext import ScrolledText
 from discord_webhook import DiscordWebhook
+import webbrowser
+import re
 import shutil
 import threading
 import time
@@ -25,75 +27,82 @@ class MyWindow:
         self.s.configure("blue.Horizontal.TProgressbar", foreground='cornflower blue', background='cornflower blue')
         self.s.configure('W.TButton', font = ('calibri', 10, 'bold', 'underline'), foreground = 'green')
 
-        self.searching = False
-        self.lbl1=Label(win, text='Add ID:')
-        self.t1=Entry(bd=3)
-        self.btn1 = Button(win, text='Add')
-        self.lbl1.place(x=25, y=25)
-        self.t1.place(x=75, y=25)
-        self.b1=Button(win, text='Add', command=self.addGuild)
-        self.b1.place(x=225, y=23)
-
-        self.lbl7=Label(win, text='Guilds:')
-        self.lbl7.place(x=25, y=50)
-
-        self.lbl2=Label(win, text='Options:')
-        self.lbl2.place(x=350, y=25)
-
-        self.lbl3=Label(win, text='Max Level:')
-        self.lbl3.place(x=350, y=50)
-        self.t2=Entry(bd=3, width=30)
-        self.t2.place(x=425, y=50)
-
-        self.lbl4=Label(win, text='Min Level:')
-        self.lbl4.place(x=350, y=75)
-        self.t3=Entry(bd=3, width=30)
-        self.t3.place(x=425, y=75)
-
-        self.lbl5=Label(win, text='Min Gold:')
-        self.lbl5.place(x=350, y=100)
-        self.t4=Entry(bd=3, width=30)
-        self.t4.place(x=425, y=100)
-
-        self.safe_mode = IntVar()
-        self.is_dead = IntVar()
-        self.verbose = IntVar()
-        self.box1=Checkbutton(text="Remove Safe Mode", variable=self.safe_mode)
-        self.box1.place(x=425, y=125)
-        self.box2=Checkbutton(text="Remove Dead", variable=self.is_dead)
-        self.box2.place(x=425, y=150)
-        self.box2=Checkbutton(text="Verbose", variable=self.verbose)
-        self.box2.place(x=425, y=175)
-        self.b3=ttk.Button(win, style = 'W.TButton', text='Search', width=37, command=lambda:self.start_submit_thread(None, win))
-        self.b3.place(x=350, y=210)
-
-
-        self.img = ImageTk.PhotoImage(Image.open(f'{dir_path}\\smmo.png'))
-        self.image =Label(window, image = self.img, height=140, width=140)
-        self.image.place(x=415, y=245)
-
-        self.lbl6=Label(win, text='Output:')
-        self.lbl6.place(x=25, y=375)
-        self.b2=Button(win, width=4, text='Clear', command=self.clearOutput)
-        self.b2.place(x=75, y=373)
-        self.b4=Button(win, width=4, text='Save', command=self.save)
-        self.b4.place(x=120, y=373)
-        self.b5=Button(win, width=4, text='Hook', command=self.sendHook)
-        self.b5.place(x=165, y=373)
-        self.out1 = ScrolledText(win, height=20)
-        self.out1.place(x=25, y=400)
-
         self.frame = Frame(win)
         self.frame.place(x=25, y=75)
 
-        self.listNodes = Listbox(self.frame, width=25, height=15, font=("Helvetica", 12))
+        self.listNodes = Listbox(self.frame, width=31, height=15, font=("Helvetica", 12))
         self.listNodes.pack(side="left", fill="y")
 
         self.scrollbar = Scrollbar(self.frame, orient="vertical")
         self.scrollbar.config(command=self.listNodes.yview)
         self.scrollbar.pack(side="right", fill="y")
-
         self.listNodes.config(yscrollcommand=self.scrollbar.set)
+
+        self.searching = False
+        self.lbl1=Label(win, text='Add ID:')
+        self.t1=Entry(bd=3, width=27)
+        self.btn1 = Button(win, text='Add')
+        self.lbl1.place(x=25, y=25)
+        self.t1.place(x=75, y=25)
+        self.b1=Button(win, text='Add', command=self.addGuild)
+        self.b1.place(x=260, y=23)
+
+        self.lbl7=Label(win, text='Guilds:')
+        self.lbl7.place(x=25, y=50)
+
+        self.lbl2=Label(win, text='Options:')
+        self.lbl2.place(x=375, y=25)
+
+        self.lbl3=Label(win, text='Max Level:')
+        self.lbl3.place(x=375, y=50)
+        self.t2=Entry(bd=3, width=30)
+        self.t2.place(x=450, y=50)
+
+        self.lbl4=Label(win, text='Min Level:')
+        self.lbl4.place(x=375, y=75)
+        self.t3=Entry(bd=3, width=30)
+        self.t3.place(x=450, y=75)
+
+        self.lbl5=Label(win, text='Min Gold:')
+        self.lbl5.place(x=375, y=100)
+        self.t4=Entry(bd=3, width=30)
+        self.t4.place(x=450, y=100)
+
+        self.safe_mode = IntVar()
+        self.is_dead = IntVar()
+        self.verbose = IntVar()
+        self.box1=Checkbutton(text="Remove Safe Mode", variable=self.safe_mode)
+        self.box1.place(x=450, y=125)
+        self.box2=Checkbutton(text="Remove Dead", variable=self.is_dead)
+        self.box2.place(x=450, y=150)
+        self.box2=Checkbutton(text="Verbose", variable=self.verbose)
+        self.box2.place(x=450, y=175)
+        self.b3=ttk.Button(win, style = 'W.TButton', text='Search', width=37, command=lambda:self.start_submit_thread(None, win))
+        self.b3.place(x=375, y=210)
+
+        self.img = ImageTk.PhotoImage(Image.open(f'{dir_path}\\images\\smmo.png'))
+        self.image =Label(win, image = self.img, height=140, width=140)
+        self.image.place(x=440, y=245)
+
+        self.lbl6=Label(win, text='Output:')
+        self.lbl6.place(x=25, y=375)
+        self.b2=Button(win, width=5, text='Clear', relief = 'groove', command=self.clearOutput)
+        self.b2.place(x=75, y=372)
+        self.b4=Button(win, width=5, text='Save', relief = 'groove', command=self.save)
+        self.b4.place(x=118, y=372)
+        self.b5=Button(win, width=5, text='Hook', relief = 'groove', state=DISABLED, command=self.sendHook)
+        self.b5.place(x=161, y=372)
+        self.b6=Button(win, width=5, text='Web', relief = 'groove', state=DISABLED, command=self.openWeb)
+        self.b6.place(x=204, y=372)
+        self.img_on = ImageTk.PhotoImage(Image.open(f'{dir_path}\\images\\on.png'))
+        self.img_off = ImageTk.PhotoImage(Image.open(f'{dir_path}\\images\\off.png'))
+        self.web_check = BooleanVar()
+        self.web_check.set(False)
+        self.b7=Button(win, borderwidth = 0, image=self.img_off, command=self.switch)
+        self.b7.place(x=250, y=371)
+        self.out1 = ScrolledText(win, height=20)
+        self.out1.place(x=25, y=400)
+
         self.progressbar = ttk.Progressbar(win, style="blue.Horizontal.TProgressbar", length=658, mode='indeterminate')
         self.progressbar.place(x=25, y=725)
 
@@ -124,6 +133,18 @@ class MyWindow:
             self.out1.delete('1.0',END)
             self.out1.insert(END, "ERROR - GUILD ID ONLY")
 
+    def switch(self):
+        if self.web_check.get():
+            self.b7.config(image=self.img_off)
+            self.web_check.set(False)
+            self.b6.config(state=DISABLED)
+            self.b5.config(state=DISABLED)
+        else:
+            self.b7.config(image=self.img_on)
+            self.web_check.set(True)
+            self.b6.config(state=NORMAL)
+            self.b5.config(state=NORMAL)
+
     def sendHook(self):
         cur_inp = self.out1.get("1.0", END)
         if len(cur_inp) >= 1900:
@@ -140,6 +161,17 @@ class MyWindow:
             output = "**SMMO Player Checker - Results**\n" + cur_inp
         webhook = DiscordWebhook(url=web_hook, content=output)
         response = webhook.execute()
+
+    def openWeb(self):
+        if self.web_check.get():
+            # cur_inp = self.out1.get("1.0", END)
+            # urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', cur_inp)
+            # for i in range(0,len(urls)):
+            #     if i == 0:
+            #         webbrowser.open_new(urls[i])
+            #     else:
+            #         webbrowser.open_new_tab(urls[i])
+            pass
 
     def save(self):
         cur_inp = self.out1.get("1.0", END)
@@ -263,6 +295,6 @@ version = config.get('DEFAULT', 'version_number')
 window=Tk()
 mywin=MyWindow(window)
 window.title(f'SMMO Player Checker BETA v{version}')
-window.iconbitmap(rf'{dir_path}\\smmo.ico')
+window.iconbitmap(rf'{dir_path}\\images\\smmo.ico')
 window.geometry("700x750")
 window.mainloop()
