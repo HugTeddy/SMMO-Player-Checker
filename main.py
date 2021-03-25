@@ -282,7 +282,7 @@ class MyWindow:
                 error_index += 1
                 if error_index == 10:
                     self.out1.insert(END, f'You might be rate limited, please try again later!')
-            time.sleep(1)
+            time.sleep(2)
 
 sys.setrecursionlimit(5000)
 dir_path = os.path.dirname(os.path.realpath(__file__))
