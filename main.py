@@ -25,7 +25,7 @@ class MyWindow:
         self.s = ttk.Style()
         self.s.theme_use('default')
         self.s.configure("blue.Horizontal.TProgressbar", foreground='cornflower blue', background='cornflower blue')
-        self.s.configure('W.TButton', font = ('calibri', 10, 'bold', 'underline'), foreground = 'green')
+        self.s.configure('W.TButton', font = ('calibri', 10, 'bold', 'underline'), relief=SUNKEN)
 
         self.frame = Frame(win)
         self.frame.place(x=25, y=75)
@@ -77,7 +77,7 @@ class MyWindow:
         self.box2.place(x=450, y=150)
         self.box2=Checkbutton(text="Verbose", variable=self.verbose)
         self.box2.place(x=450, y=175)
-        self.b3=ttk.Button(win, style = 'W.TButton', text='Search', width=37, command=lambda:self.start_submit_thread(None, win))
+        self.b3=ttk.Button(win, style = 'W.TButton', text='SEARCH', width=37, command=lambda:self.start_submit_thread(None, win))
         self.b3.place(x=375, y=210)
 
         self.img = ImageTk.PhotoImage(Image.open(f'{dir_path}\\images\\smmo.png'))
@@ -98,7 +98,7 @@ class MyWindow:
         self.img_off = ImageTk.PhotoImage(Image.open(f'{dir_path}\\images\\off.png'))
         self.web_check = BooleanVar()
         self.web_check.set(False)
-        self.b7=Button(win, borderwidth = 0, image=self.img_off, command=self.switch)
+        self.b7=Button(win, borderwidth = 0, image=self.img_off, command=self.switch, relief=SUNKEN)
         self.b7.place(x=250, y=371)
         self.out1 = ScrolledText(win, height=20)
         self.out1.place(x=25, y=400)
