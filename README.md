@@ -13,4 +13,8 @@ Update `config.ini` with your API key from the SMMO webapp, found [Here](https:/
 Run by double clicking `run.bat` or issuing `python3 main.py` in powershell/terminal
 
 ## Images
+Main Screen
 ![](./images/sample.png)
+
+Web Browsing Utility
+![](https://i.gyazo.com/66f4e7bce22df1c97ce7c03a1c7870b1.mp4)

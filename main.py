@@ -25,7 +25,7 @@ class MyWindow:
         self.s = ttk.Style()
         self.s.theme_use('default')
         self.s.configure("blue.Horizontal.TProgressbar", foreground='cornflower blue', background='cornflower blue')
-        self.s.configure('W.TButton', font = ('calibri', 10, 'bold', 'underline'), relief=SUNKEN)
+        self.s.configure('W.TButton', font = ('calibri', 10, 'bold', 'underline'))
 
         self.frame = Frame(win)
         self.frame.place(x=25, y=75)
@@ -106,6 +106,9 @@ class MyWindow:
         self.progressbar = ttk.Progressbar(win, style="blue.Horizontal.TProgressbar", length=658, mode='indeterminate')
         self.progressbar.place(x=25, y=725)
 
+        self.result_list = {}
+        self.result_index = 0
+
         with open(f'{dir_path}\\data\\guildlist.txt', 'r') as f:
             guildlist = json.load(f)
         for item in guildlist.values():
@@ -146,32 +149,86 @@ class MyWindow:
             self.b5.config(state=NORMAL)
 
     def sendHook(self):
-        cur_inp = self.out1.get("1.0", END)
-        if len(cur_inp) >= 1900:
-            index = 0
-            output = "**SMMO Player Checker - Results**\n"
-            search_terms = cur_inp.split("--------------")[0]
-            results = cur_inp.split("--------------")[0].split("\n\n")
-            output += search_terms
-            while output >= 1500:
-                output += results[index]
-                index += 1
-            output += "More..."
+        if len(self.result_list) > 0:
+            cur_inp = self.out1.get("1.0", END)
+            if len(cur_inp) >= 1900:
+                index = 0
+                output = "**SMMO Player Checker - Results**\n"
+                search_terms = cur_inp.split("--------------")[0]
+                results = cur_inp.split("--------------")[0].split("\n\n")
+                output += search_terms
+                while output >= 1500:
+                    output += results[index]
+                    index += 1
+                output += "More..."
+            else:
+                output = "**SMMO Player Checker - Results**\n" + cur_inp
+            webhook = DiscordWebhook(url=web_hook, content=output)
+            response = webhook.execute()
         else:
-            output = "**SMMO Player Checker - Results**\n" + cur_inp
-        webhook = DiscordWebhook(url=web_hook, content=output)
-        response = webhook.execute()
+            self.out1.insert(END, "No cached search results.\n")
 
     def openWeb(self):
-        if self.web_check.get():
-            # cur_inp = self.out1.get("1.0", END)
-            # urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', cur_inp)
-            # for i in range(0,len(urls)):
-            #     if i == 0:
-            #         webbrowser.open_new(urls[i])
-            #     else:
-            #         webbrowser.open_new_tab(urls[i])
-            pass
+        if len(self.result_list) > 0:
+            root = Tk()
+            root.title(f'SMMO Web Utility')
+            root.iconbitmap(rf'{dir_path}\\images\\smmo.ico')
+            root.geometry("250x100")
+
+            options = list(self.result_list.keys())
+            self.root_sel = StringVar(root)
+            self.root_sel.set(options[0])
+            w = OptionMenu(root, self.root_sel, *options)
+            w.config(width=25)
+            w.place(x=25, y=10)
+
+            self.back=Button(root, width=5, text='<<', relief = 'groove', command=self.root_back)
+            self.back.place(x=65, y=45)
+
+            self.go=Button(root, width=5, text='GO', relief = 'groove', command=self.root_go)
+            self.go.place(x=105, y=45)
+
+            self.forward=Button(root, width=5, text='>>', relief = 'groove', command=self.root_forward)
+            self.forward.place(x=145, y=45)
+
+            self.check_state()
+
+            webbrowser.open(f'https://web.simple-mmo.com/user/attack/{self.result_list[options[0]]}', autoraise=True)
+        else:
+            self.out1.insert(END, "No cached search results.\n")
+
+    def check_state(self):
+        if self.result_index == 0 and self.result_index == len(self.result_list)-1:
+            self.back.config(state=DISABLED)
+            self.forward.config(state=DISABLED)
+        elif self.result_index == 0:
+            self.back.config(state=DISABLED)
+        elif self.result_index == len(self.result_list)-1:
+            self.forward.config(state=DISABLED)
+        else:
+            self.forward.config(state=NORMAL)
+            self.back.config(state=NORMAL)
+
+    def root_back(self):
+        local_results = list(self.result_list.keys())
+        self.result_index -= 1
+        self.root_sel.set(local_results[self.result_index])
+        webbrowser.open(f'https://web.simple-mmo.com/user/attack/{self.result_list[local_results[self.result_index]]}', new=0)
+        self.check_state()
+
+    def root_go(self):
+        local_results = list(self.result_list.keys())
+        print(self.root_sel.get())
+        self.result_index = local_results.index(self.root_sel.get())
+        webbrowser.open(f'https://web.simple-mmo.com/user/attack/{self.result_list[local_results[self.result_index]]}', new=0)
+        self.check_state()
+
+    def root_forward(self):
+        local_results = list(self.result_list.keys())
+        self.result_index += 1
+        self.root_sel.set(local_results[self.result_index])
+        webbrowser.open(f'https://web.simple-mmo.com/user/attack/{self.result_list[local_results[self.result_index]]}', new=0)
+        self.check_state()
 
     def save(self):
         cur_inp = self.out1.get("1.0", END)
@@ -180,6 +237,7 @@ class MyWindow:
 
     def clearOutput(self):
         self.out1.delete('1.0',END)
+        self.result_list = {}
 
     def search(self):
         while self.searching == True:
@@ -243,6 +301,7 @@ class MyWindow:
         global submit_thread
         submit_thread = threading.Thread(target=self.search)
         self.searching = True
+        self.result_list = {}
         submit_thread.daemon = True
         submit_thread.start()
         self.progressbar.start()
@@ -268,14 +327,18 @@ class MyWindow:
                     if self.safe_mode.get() == 1 and self.is_dead.get() == 1:
                         if lib["safeMode"] == 0 and int(lib["hp"]*2) > lib["max_hp"]:
                             self.printUser(lib)
+                            self.result_list[lib["name"]] = lib["id"]
                     elif self.is_dead.get() == 1:
                         if int(lib["hp"]*2) > lib["max_hp"]:
                             self.printUser(lib)
+                            self.result_list[lib["name"]] = lib["id"]
                     elif self.safe_mode.get() == 1:
                         if lib["safeMode"] == 0:
                             self.printUser(lib)
+                            self.result_list[lib["name"]] = lib["id"]
                     else:
                         self.printUser(lib)
+                        self.result_list[lib["name"]] = lib["id"]
 
             except Exception as e:
                 print(e)
