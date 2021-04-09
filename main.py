@@ -157,7 +157,7 @@ class MyWindow:
                 search_terms = cur_inp.split("--------------")[0]
                 results = cur_inp.split("--------------")[0].split("\n\n")
                 output += search_terms
-                while output >= 1500:
+                while len(output) >= 1500:
                     output += results[index]
                     index += 1
                 output += "More..."
