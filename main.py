@@ -155,12 +155,18 @@ class MyWindow:
                 index = 0
                 output = "**SMMO Player Checker - Results**\n"
                 search_terms = cur_inp.split("--------------")[0]
-                results = cur_inp.split("--------------")[0].split("\n\n")
+                results = cur_inp.split("--------------")[1].split("\n\n")
                 output += search_terms
-                while len(output) >= 1500:
-                    output += results[index]
-                    index += 1
-                output += "More..."
+                while index < len(results):
+                    if len(output) <= 1500:
+                        output += f'{results[index]}\n'
+                        index += 1
+                    else:
+                        webhook = DiscordWebhook(url=web_hook, content=output)
+                        response = webhook.execute()
+                        time.sleep(3)
+                        output = f'{results[index]}\n'
+                        index += 1
             else:
                 output = "**SMMO Player Checker - Results**\n" + cur_inp
             webhook = DiscordWebhook(url=web_hook, content=output)
