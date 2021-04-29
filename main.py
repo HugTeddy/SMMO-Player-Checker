@@ -19,6 +19,7 @@ import os
 import sys
 import configparser
 import math
+import random
 
 class MyWindow:
     def __init__(self, win):
@@ -37,6 +38,7 @@ class MyWindow:
         self.scrollbar.config(command=self.listNodes.yview)
         self.scrollbar.pack(side="right", fill="y")
         self.listNodes.config(yscrollcommand=self.scrollbar.set)
+        self.listNodes.insert(END, "All Players")
 
         self.searching = False
         self.lbl1=Label(win, text='Add ID:')
@@ -253,25 +255,28 @@ class MyWindow:
             if guild_name == "":
                 self.out1.insert(END, "ERROR")
                 return
-            with open(f'{dir_path}\\data\\guildlist.txt', 'r') as f:
-                guildlist = json.load(f)
-            for id, name in guildlist.items():
-                if name == guild_name:
-                    guild_id = id
-            if guild_id == 0:
-                self.out1.insert(END, "ERROR")
-                return
-            self.out1.insert(END, f'Found Guild - {guild_id}\n')
-            users = []
-            endpoint = f'https://api.simple-mmo.com/v1/guilds/members/{guild_id}'
-            payload = {'api_key': api_key}
-            r = requests.post(url = endpoint, data = payload)
-            lib = r.json()
-            for user in lib:
-                users.append(user["user_id"])
-            with open(f'{dir_path}\\data\\{guild_id}.txt', 'w') as f:
-                json.dump(users, f)
-            self.out1.insert(END, f'Found Members - {len(users)}\n')
+            if guild_name == "All Players":
+                users = random.sample(range(100, 500000), 10000)
+            else:
+                with open(f'{dir_path}\\data\\guildlist.txt', 'r') as f:
+                    guildlist = json.load(f)
+                for id, name in guildlist.items():
+                    if name == guild_name:
+                        guild_id = id
+                if guild_id == 0:
+                    self.out1.insert(END, "ERROR")
+                    return
+                self.out1.insert(END, f'Found Guild - {guild_id}\n')
+                users = []
+                endpoint = f'https://api.simple-mmo.com/v1/guilds/members/{guild_id}'
+                payload = {'api_key': api_key}
+                r = requests.post(url = endpoint, data = payload)
+                lib = r.json()
+                for user in lib:
+                    users.append(user["user_id"])
+                with open(f'{dir_path}\\data\\{guild_id}.txt', 'w') as f:
+                    json.dump(users, f)
+                self.out1.insert(END, f'Found Members - {len(users)}\n')
             try:
                 max_level = int(self.t2.get())
             except:
