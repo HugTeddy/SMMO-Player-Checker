@@ -296,15 +296,24 @@ class MyWindow:
                 search_term += "Dead Players Removed\n"
             if self.verbose.get() == 1:
                 search_term += "Verbose On\n"
+            if min_gold != 0:
+                search_term += "Gold Searching - Limits searches to API limits, remove gold requirement for quicker search\n"
             search_term += "--------------\n"
             self.out1.insert(END, search_term)
-            self.searchUsers(users, max_level, min_level, min_gold)
+            if min_gold == 0:
+                self.searchUsers(lib, max_level, min_level, min_gold)
+            else:
+                self.searchUsers(users, max_level, min_level, min_gold)
             self.out1.insert(END, "Complete!\n")
             self.searching = False
 
-    def printUser(self, lib):
-        if self.verbose.get() == 0:
+    def printUser(self, lib, option = 0):
+        if self.verbose.get() == 0 and option == 0:
             self.out1.insert(END, f'[{lib["name"]}](<https://web.simple-mmo.com/user/attack/{lib["id"]}>)\n')
+        elif self.verbose.get() == 0 and option == 1:
+            self.out1.insert(END, f'[{lib["name"]}](<https://web.simple-mmo.com/user/attack/{lib["user_id"]}>)\n')
+        elif option == 1:
+            self.out1.insert(END, f'Name: {lib["name"]}\nLevel: {lib["level"]}\nHP: {lib["current_hp"]}/{lib["max_hp"]}\n[Attack Link](<https://web.simple-mmo.com/user/attack/{lib["user_id"]}>)\n\n')
         else:
             self.out1.insert(END, f'Name: {lib["name"]}\nLevel: {lib["level"]}\nHP: {lib["hp"]}/{lib["max_hp"]}\nGold: {lib["gold"]}\n[Attack Link](<https://web.simple-mmo.com/user/attack/{lib["id"]}>)\n\n')
 
@@ -327,36 +336,55 @@ class MyWindow:
     def searchUsers(self, users, max_level, min_level, min_gold):
         index = 0
         error_index = 0
-        for userid in users:
-            try:
-                endpoint = "https://api.simple-mmo.com/v1/player/info/" + f'{userid}'
-                payload = {'api_key': api_key}
-                r = requests.post(url = endpoint, data = payload)
-                lib = r.json()
-                index += 1
-                if lib["level"] >= min_level and lib["level"] <= max_level and lib["gold"] >= min_gold:
+        if min_gold == 0:
+            for user in users:
+                if user["level"] >= min_level and user["level"] <= max_level:
                     if self.safe_mode.get() == 1 and self.is_dead.get() == 1:
-                        if lib["safeMode"] == 0 and int(lib["hp"]*2) > lib["max_hp"]:
-                            self.printUser(lib)
-                            self.result_list[lib["name"]] = lib["id"]
+                        if user["safe_mode"] == 0 and int(user["current_hp"]*2) > user["max_hp"]:
+                            self.printUser(user, 1)
+                            self.result_list[user["name"]] = user["user_id"]
                     elif self.is_dead.get() == 1:
-                        if int(lib["hp"]*2) > lib["max_hp"]:
-                            self.printUser(lib)
-                            self.result_list[lib["name"]] = lib["id"]
+                        if int(user["current_hp"]*2) > user["max_hp"]:
+                            self.printUser(user, 1)
+                            self.result_list[user["name"]] = user["user_id"]
                     elif self.safe_mode.get() == 1:
-                        if lib["safeMode"] == 0:
+                        if user["safe_mode"] == 0:
+                            self.printUser(user, 1)
+                            self.result_list[user["name"]] = user["user_id"]
+                    else:
+                        self.printUser(user)
+                        self.result_list[user["name"]] = user["user_id"]
+        else:
+            for userid in users:
+                try:
+                    endpoint = "https://api.simple-mmo.com/v1/player/info/" + f'{userid}'
+                    payload = {'api_key': api_key}
+                    r = requests.post(url = endpoint, data = payload)
+                    lib = r.json()
+                    index += 1
+                    if lib["level"] >= min_level and lib["level"] <= max_level and lib["gold"] >= min_gold:
+                        if self.safe_mode.get() == 1 and self.is_dead.get() == 1:
+                            if lib["safeMode"] == 0 and int(lib["hp"]*2) > lib["max_hp"]:
+                                self.printUser(lib)
+                                self.result_list[lib["name"]] = lib["id"]
+                        elif self.is_dead.get() == 1:
+                            if int(lib["hp"]*2) > lib["max_hp"]:
+                                self.printUser(lib)
+                                self.result_list[lib["name"]] = lib["id"]
+                        elif self.safe_mode.get() == 1:
+                            if lib["safeMode"] == 0:
+                                self.printUser(lib)
+                                self.result_list[lib["name"]] = lib["id"]
+                        else:
                             self.printUser(lib)
                             self.result_list[lib["name"]] = lib["id"]
-                    else:
-                        self.printUser(lib)
-                        self.result_list[lib["name"]] = lib["id"]
 
-            except Exception as e:
-                print(e)
-                error_index += 1
-                if error_index == 10:
-                    self.out1.insert(END, f'You might be rate limited, please try again later!')
-            time.sleep(2)
+                except Exception as e:
+                    print(e)
+                    error_index += 1
+                    if error_index == 10:
+                        self.out1.insert(END, f'You might be rate limited, please try again later!')
+                time.sleep(2)
 
 sys.setrecursionlimit(5000)
 dir_path = os.path.dirname(os.path.realpath(__file__))
