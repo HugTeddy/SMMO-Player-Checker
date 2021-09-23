@@ -1,7 +1,7 @@
 """
 SMMO Player Checker
 Author:      HugTed
-Date:        03/20/2021
+Date:        09/23/2021
 """
 from tkinter import *
 from tkinter import ttk
@@ -361,23 +361,24 @@ class MyWindow:
                     payload = {'api_key': api_key}
                     r = requests.post(url = endpoint, data = payload)
                     lib = r.json()
-                    index += 1
-                    if lib["level"] >= min_level and lib["level"] <= max_level and lib["gold"] >= min_gold:
-                        if self.safe_mode.get() == 1 and self.is_dead.get() == 1:
-                            if lib["safeMode"] == 0 and int(lib["hp"]*2) > lib["max_hp"]:
+                    if "error" not in lib.keys():
+                        index += 1
+                        if lib["level"] >= min_level and lib["level"] <= max_level and lib["gold"] >= min_gold:
+                            if self.safe_mode.get() == 1 and self.is_dead.get() == 1:
+                                if lib["safeMode"] == 0 and int(lib["hp"]*2) > lib["max_hp"]:
+                                    self.printUser(lib)
+                                    self.result_list[lib["name"]] = lib["id"]
+                            elif self.is_dead.get() == 1:
+                                if int(lib["hp"]*2) > lib["max_hp"]:
+                                    self.printUser(lib)
+                                    self.result_list[lib["name"]] = lib["id"]
+                            elif self.safe_mode.get() == 1:
+                                if lib["safeMode"] == 0:
+                                    self.printUser(lib)
+                                    self.result_list[lib["name"]] = lib["id"]
+                            else:
                                 self.printUser(lib)
                                 self.result_list[lib["name"]] = lib["id"]
-                        elif self.is_dead.get() == 1:
-                            if int(lib["hp"]*2) > lib["max_hp"]:
-                                self.printUser(lib)
-                                self.result_list[lib["name"]] = lib["id"]
-                        elif self.safe_mode.get() == 1:
-                            if lib["safeMode"] == 0:
-                                self.printUser(lib)
-                                self.result_list[lib["name"]] = lib["id"]
-                        else:
-                            self.printUser(lib)
-                            self.result_list[lib["name"]] = lib["id"]
 
                 except Exception as e:
                     print(e)
