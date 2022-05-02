@@ -2,15 +2,21 @@
 ## About
 Standalone utility to check player status for PvP interests in SimpleMMO.
 
-## Requirements
--	Python3
-- requests==2.24.0
-- discord_webhook==0.12.0
-- Pillow==8.1.2
-
 ## Initial Config
 Update `config.ini` with your API key from the SMMO webapp, found [Here](https://web.simple-mmo.com/p-api/home)
-Run by double clicking `run.bat` or issuing `python3 main.py` in powershell/terminal
+
+Run by double clicking `SimpleMMO Player Checker.exe`
+
+Sample Config:
+```ini
+[DEFAULT]
+version_number = 0.10.0
+api_key = 16sdfiAIJW.124924snviAJDFP_WIODS
+web_hook = https://webhook.com/example
+own_guild = 123
+hotkey1 = k
+hotkey2 = s
+```
 
 ## Images
 Main Screen
