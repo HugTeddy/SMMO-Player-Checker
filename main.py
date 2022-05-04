@@ -2,7 +2,7 @@
 SMMO Player Checker
 Author:      HugTed
 Date:        05/3/2022
-Version:     0.11.0
+Version:     0.11.1
 """
 import configparser
 import json
@@ -72,7 +72,7 @@ layoutB = [
 
 mainlayout = [
     [sg.Column(layoutA), sg.Column(layoutB)],
-    [sg.Table(values=[], headings=["ID", "Name", "Level", "Banned", "Kills"], auto_size_columns=True, k="tree",
+    [sg.Table(values=[], headings=["ID", "Name", "Level", "Gold", "Banned", "Kills"], auto_size_columns=True, k="tree",
               font=FONT, expand_x=True, num_rows=12, justification="center")],
     [sg.Multiline("", font=FONT, expand_x=True, size=(0, 5), k="Output")]
 ]
@@ -350,7 +350,7 @@ def callWarInfo():
 # Get Next Player
 def newPlayer():
     global TARGET_LIST, TARGET_INDEX, TEMP_LIST, BANNED_LIST
-    while len(TARGET_LIST) > TARGET_INDEX:
+    while len(TARGET_LIST)-1 > TARGET_INDEX:
         if TEMP_LIST.count(TARGET_LIST[TARGET_INDEX]) == 3:
             TARGET_INDEX += 1
         elif TARGET_LIST[TARGET_INDEX] in BANNED_LIST:
@@ -358,9 +358,7 @@ def newPlayer():
         else:
             break
 
-    if len(TARGET_LIST) == TARGET_INDEX+1:
-        with open("./data/temp.txt", "w") as f:
-            json.dump(TEMP_LIST, f)
+    if len(TARGET_LIST) <= TARGET_INDEX + 1:
         return False
 
     res = openYomu(TARGET_LIST[TARGET_INDEX])
@@ -427,8 +425,12 @@ def updateTable(window):
     if len(TARGET_DATA) != 0:
         output_list = []
         for user in TARGET_DATA:
-            output_list.append(
-                [user["user_id"], user["name"], f'{user["level"]:,}', checkBan(user["user_id"]), checkTemp(user["user_id"])])
+            if "gold" in user.keys():
+                output_list.append(
+                    [user["user_id"], user["name"], f'{user["level"]:,}', f'{user["gold"]:,}', checkBan(user["user_id"]), checkTemp(user["user_id"])])
+            else:
+                output_list.append(
+                    [user["user_id"], user["name"], f'{user["level"]:,}', f'N/A', checkBan(user["user_id"]), checkTemp(user["user_id"])])
         window["tree"].Update(values=output_list, select_rows=[TARGET_INDEX])
         window["tree"].set_vscroll_position(TARGET_INDEX / len(TARGET_DATA))
     else:
@@ -484,7 +486,7 @@ if __name__ == "__main__":
             TARGET_LIST = []
             TARGET_DATA = []
             updateTable(window)
-        elif event == "Clear Temp":
+        elif event == "Clear List":
             clearTemp()
 
         updateTable(window)
